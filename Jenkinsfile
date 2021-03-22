@@ -1,10 +1,30 @@
-pipeline {
-    agent { docker { image 'python:3.5.1' } }
-    stages {
-        stage('build') {
-            steps {
-                sh 'python --version'
-            }
+node {
+    def app
+
+    stage('Clone repository') {
+      
+
+        checkout scm
+    }
+
+    stage('Build image') {
+  
+       app = docker.build("smokimk/test2")
+    }
+
+    stage('Test image') {
+  
+
+        app.inside {
+            sh 'echo "Tests passed"'
+        }
+    }
+
+    stage('Push image') {
+        
+        docker.withRegistry('https://registry.hub.docker.com', 'git') {
+            app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
+            app.push("latest")
         }
     }
 }
